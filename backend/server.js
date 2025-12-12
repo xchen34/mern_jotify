@@ -4,7 +4,7 @@ import express from "express";
 const app = express();  
 
 app.get("/api/notes", (req,res) => {
-    res.send("you got 5 notes");
+    res.status(200).send("you got 10 notes");
 });
 
 //listen() method is used to bind and listen the connections on the specified host and port, console.log() is used to print the message on the console once the server starts
