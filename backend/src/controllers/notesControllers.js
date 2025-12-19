@@ -21,7 +21,7 @@ export async function getAllNotes(req, res){      //这里没有用到req 所以
     //res.status(200).send("欢迎参加大岛优子和我的婚礼");
     try
     {
-        const notes = (await Note.find()).sort({createdAt: -1}); //find() 方法用于查询数据库中的所有文档，并返回一个包含所有匹配文档的数组。  sort({createdAt: -1}) 最近创建的排在最前面
+        const notes = await Note.find().sort({createdAt: -1}); //find() 方法用于查询数据库中的所有文档，并返回一个包含所有匹配文档的数组。  sort({createdAt: -1}) 最近创建的排在最前面
         res.status(200).json(notes);
     }catch(error)
     {
