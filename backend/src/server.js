@@ -16,6 +16,8 @@ import rateLimiter from "./middleware/rateLimiter.js";
 // 加在定义前面的export const X：像是房间里有很多小盒子，你必须指名道姓要拿哪个盒子。导入时写 import { X } from ...。
 import {connectDB} from "./config/db.js"
 
+import path from "path";
+
 
 
 
@@ -50,7 +52,10 @@ const app = express();  //执行上面创建的express函数，返回一个expre
 
 //设置配置 使用app.set(KEY, VALUE)来设置配置 KEY是配置项，VALUE是配置值 比如app.set("port", 3000);
 
+
 const PORT = process.env.PORT || 5001; //process.env.PORT 是环境变量，如果环境变量中没有设置PORT，则使用默认值5001
+const __dirname = path.resolve(); //获取当前文件的目录路径
+
 connectDB().then(() => {
     app.listen(PORT,() => {
         console.log("Server started on PORT:", PORT);
@@ -66,9 +71,13 @@ connectDB().then(() => {
 //         把那一串 JSON 字符串“翻译”回 JavaScript 对象。
 //         把它挂载到 req.body 上，供你后续使用。
 
-app.use(cors({
-    origin:"http://localhost:5173",
-})); 
+if (process.env.NODE_ENV !== "production"){
+    app.use(cors({
+        origin:"http://localhost:5173",
+    })); //这个是前后端不在同端口时需要的 跨域资源共享 中间件
+}
+
+
 
 app.use(express.json());  //this middleware will parse json bodies to allow acces to them in req.body
 
@@ -134,6 +143,105 @@ app.use("/api/notes", notesRoutes);
 // });
 
 
+//若前后端在同一端口下运行 则不需要cors中间件
+// express.static() - Express内置的静态文件服务中间件
+// 将指定文件夹中的文件直接暴露给客户端访问
+// path.join(__dirname,"../frontend/dist") - 构建文件路径
+// __dirname 是当前文件所在目录（src）
+// "../frontend/dist" 是相对路径
+// 最终指向：dist
+// 实际效果：
+// 当用户访问 http://localhost:5001/ 时，服务器会返回 dist 文件夹中的 index.html
+// 浏览器加载的 CSS、JS 等资源也都从这个文件夹中获取
+// 实现前后端同端口部署，不需要单独启动前端开发服务器
+if (process.env.NODE_ENV === "production"){
+    app.use(express.static(path.join(__dirname,"../frontend/dist"))) ; //托管前端静态文件  指定一个目录用于提供静态文件服务 这里是前端打包后的dist文件夹
+    app.get("*", (req, res) => {
+        res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    }); //处理前端路由刷新问题 访问不存在的路由时返回index.html 让前端路由接管 
+}   
+// if (process.env.NODE_ENV === "production")
+// 这是环境判断，检查当前是否运行在生产环境。
+
+// NODE_ENV 环境变量的值：
+
+// "production" - 生产环境（部署到服务器后，真实用户使用）
+// "development" - 开发环境（本地开发时）
+// 未设置时默认 undefined
+// 为什么需要这个判断？
+// 开发环境（本地）：
+// - 前端用 Vite 开发服务器运行在 localhost:5173
+// - 后端运行在 localhost:5001
+// - 需要 CORS 跨域
+
+// 生产环境（部署后）：
+// - 前端打包成 dist/ 静态文件
+// - 后端托管这些静态文件
+// - 前后端同端口，不需要 CORS
+// 实际效果：
+
+// 只有在生产环境时才：
+
+// 托管前端静态文件
+// 启用 app.get("*", ...) 兜底路由
+// 开发环境时这两行代码不会执行，因为你的前端在 Vite 服务器上独立运行。
+
+// 如何设置环境变量？
+// # 开发环境（默认）
+// npm run dev
+
+// # 生产环境
+// NODE_ENV=production npm start
+// 或者在 .env 文件中：
+// NODE_ENV=production
+
+// app.get("*", ...) 这行代码是一个兜底路由（catch-all route），作用是捕获所有未匹配的GET请求，返回前端的入口文件。
+
+// 具体在干什么？
+// app.get("*", (req, res) => {
+//     res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+// });
+// "*" - 通配符，匹配所有路径
+// res.sendFile(...) - 发送 index.html 文件给客户端
+// 为什么需要它？解决刷新404问题
+// 场景1：正常点击链接（✅ 工作正常）
+// 用户点击 /notes/123 链接
+// → 前端路由拦截，在客户端渲染页面
+// → 不向服务器发送请求
+// → 正常显示
+// 场景2：直接访问或刷新（❌ 没有兜底路由会404）
+// 用户在地址栏输入 /notes/123 或按F5刷新
+// → 浏览器向服务器请求 /notes/123
+// → 服务器上没有这个文件
+// → 返回 404 Not Found
+// 场景3：有兜底路由后（✅ 问题解决）
+// 用户刷新 /notes/123
+// → 服务器收到请求
+// → 匹配到 app.get("*")
+// → 返回 index.html
+// → 前端路由读取 URL (/notes/123)
+// → 渲染对应页面
+// 请求匹配顺序
+// // 1. 静态文件优先（CSS、JS、图片等）
+// app.use(express.static(...))
+
+// // 2. API路由
+// app.use("/api/notes", notesRoutes)  // /api/notes/123 → API处理
+
+// // 3. 最后兜底：所有其他GET请求返回 index.html
+// app.get("*", ...)  // /notes/123, /about, /随便什么 → 返回 index.html
+
+
+// 这是整个 Express 应用的中间件和路由设置顺序示例：
+// 1. app.use(express.json())         // ✅ JSON解析
+// 2. app.use(rateLimiter)            // ✅ 限流
+// 3. app.use("/api/notes", notesRoutes)  // ✅ API路由
+// 4. if (production) {
+//        app.use(express.static(...))    // ✅ 静态文件
+//        app.get("*", ...)               // ✅ 兜底路由（最后）
+//    }
+
+
 
 //mongodb+srv://leochen:<db_password>@cluster0.7zqa0uq.mongodb.net/?appName=Cluster0
 
@@ -164,3 +272,6 @@ app.use("/api/notes", notesRoutes);
 
 // rate limit限制请求频率，防止恶意攻击，防止服务器压力过大 ex: only 100 req per user eveyr 15min
 // prevent abuse, protec server from getting overwhelmed   429 too many requests
+
+
+
