@@ -10,14 +10,27 @@ import dotenv from "dotenv";
 
 dotenv.config(); //加载.env文件中的环境变量
 
+//Ratelimit 类：用于创建限流器实例 包括限流规则和 Redis 连接信息
 //create a ratelimiter that allows 10 req per 20s 
 const ratelimit = new Ratelimit({
-    redis: Redis.fromEnv(),  //从.env文件中获取redis配置 连接redis
-    limiter: Ratelimit.slidingWindow(20, "10 s"),  //滑动窗口限流器，每20秒最多10个请求
+    redis: Redis.fromEnv(),  //从.env文件中获取redis配置 连接redis  redis是Ratelimit类构造函数的配置对象的一个属性
+    limiter: Ratelimit.slidingWindow(20, "10 s"),  //limiter也是一个属性  滑动窗口限流器，每20秒最多10个请求
 });
 
 
-export default ratelimit;
+// 为什么不用 process.env.REDIS？
+// 因为 Redis.fromEnv() 已经帮你自动读取了环境变量！
+// // @upstash/redis 内部实现（简化版）
+// class Redis {
+//     static fromEnv() {
+//         return new Redis({
+//             url: process.env.UPSTASH_REDIS_REST_URL,      // ← 自动读取
+//             token: process.env.UPSTASH_REDIS_REST_TOKEN   // ← 自动读取
+//         });
+//     }
+// }
+
+// export default ratelimit;
 
 
 

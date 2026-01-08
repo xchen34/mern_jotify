@@ -1,5 +1,7 @@
 import express from "express";
 import {getAllNotes, getNoteById, createNote, updateNote, deleteNote} from '../controllers/notesControllers.js'
+
+//Router()创建一个新的路由对象 是 Express.js 提供的一个功能，允许你创建模块化、可挂载的路由处理器。
 const router = express.Router();
 
 //controllers文件夹下的文件可以专门用来写路由的回调函数 即处理请求的逻辑单独抽离到controllers
@@ -30,7 +32,7 @@ const router = express.Router();
 
 //不能这样写router.get("/", getAllNotes(req, res)); 因为她会导致回调函数立即执行 而不是等请求到了才执行
 router.get("/", getAllNotes);
-router.get("/:id", getNoteById);
+router.get("/:id", getNoteById); //注意这里的:id 是一个动态参数 表示笔记的唯一标识符ID 当客户端请求 /api/notes/123 时，123 会被解析为 id 参数的值，可以通过 req.params.id 访问它
 router.post("/", createNote);
 router.put("/:id", updateNote);
 router.delete("/:id", deleteNote);
