@@ -156,3 +156,10 @@ dist/
 部署：后端服务器通过 express.static() 托管 dist/ 文件夹
 访问：用户访问 http://localhost:5001/ → 获取 dist/index.html 及其资源
 这就是为什么你的后端能直接提供前端页面的原因！
+
+
+
+我在开发时第一次装了dependencies 所有的都会自动被记录到package.json 这样在部署的时候就不用一条条查询我安装了什么重新安装 而是一个npm install就会根据package.json自动安装所有依赖
+react是前端UI库（meta开发 不是框架）  vite是构建工具也不是框架 react需要自己搭配工具 灵活 适合中小项目 javascript/typescript可选 next.js=react全站框架
+竞争对手是angular(前端框架 google开发) 更难学 灵活性低但全家通 适合大型企业项目 typescript强制
+
