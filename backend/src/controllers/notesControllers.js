@@ -1,5 +1,16 @@
 
+import mongoose from "mongoose";   //用于检查ID的有效性
 import Note from "../models/Note.js"
+
+//比原始版本增加了功能 支持多用户 每个用户只能访问自己的笔记 user+guest（visitor mode）
+//ownerFilter函数根据请求对象中的认证信息，构建一个过滤器对象，用于确保数据库查询只返回属于当前认证用户的笔记。
+//所有的Note查询/修改 都必须加上owner条件 ownerId = req.auth.id  ownerType=req.auth.type
+//并且create的时候写入owner(guest还要可选加expiresAt)
+
+const ownerFilter = (req) => {
+    return { ownerId: req.auth.id, ownerType: req.auth.type};
+}
+
 // 在这个文件中，req 和 res 仅仅是函数的形参 (formal parameters)。
 // 它们的名字是约定俗成的，代表了“请求”和“响应”，但它们本身并没有在文件中被定义或导入。
 // Express 内部的工作机制 (调用时机)
@@ -21,7 +32,7 @@ export async function getAllNotes(req, res){      //这里没有用到req 所以
     //res.status(200).send("欢迎参加大岛优子和我的婚礼");
     try
     {
-        const notes = await Note.find().sort({createdAt: -1}); //find() 方法用于查询数据库中的所有文档，并返回一个包含所有匹配文档的数组。  sort({createdAt: -1}) 最近创建的排在最前面
+        const notes = await Note.find(ownerFilter(req)).sort({createdAt: -1}); //find() 方法用于查询数据库中的所有文档，并返回一个包含所有匹配文档的数组。  sort({createdAt: -1}) 最近创建的排在最前面
         res.status(200).json(notes);
     }catch(error)
     {
@@ -32,7 +43,13 @@ export async function getAllNotes(req, res){      //这里没有用到req 所以
 
 export async function  getNoteById(req, res){
     try{
-        const note = await Note.findById(req.params.id);
+        //防止恶意输入 非法ID导致服务器崩溃
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)){
+            return res.status(400).json({message:"Invalid note ID鸭鸭鸭"});
+        }
+        
+        //const note = await Note.findById(req.params.id);
+        const note = await Note.findOne({_id: req.params.id, ...ownerFilter(req)}); //确保只能访问自己的笔记
         if (!note) return res.status(404).json({message:"Note not found鸭鸭鸭"});
         res.status(200).json(note);
     }catch (error){
@@ -51,7 +68,24 @@ export async function createNote(req, res){
     //res.status(201).json({message: "Created:欢迎参加大岛优子和我的婚礼"});
     try{
         const {title, content} = req.body;  
-        const newNote = new Note({title, content});  //构造函数 参数取决与前面的模型 
+        
+        if (!title?.trim() || !content?.trim()) {
+            return res.status(400).json({message: "Title and content are required鸭鸭鸭"});
+        }
+
+        if (title.length > 100) {
+            return res.status(400).json({message: "Title cannot exceed 100 characters鸭鸭鸭"});
+        }
+
+        if (content.length > 5000) {
+            return res.status(400).json({message: "Content cannot exceed 5000 characters鸭鸭鸭"});
+        }
+
+        const expiresAt = req.auth.type === "guest"? new Date(Date.now() + 7*24*60*60*1000) : null; //访客模式下笔记7天后过期 
+        
+        
+        
+        const newNote = new Note({title:title.trim(), content:content.trim(), ownerId:req.auth.id, ownerType:req.auth.type, expiresAt});  //构造函数 参数取决与前面的模型 
         //创建“表里的一行数据”的内存对象（document），但此时还没有真正写入数据库。
         //在mongoose里  表=集合 collection  行=document
         
@@ -76,7 +110,19 @@ export async function updateNote(req, res){
     //res.status(200).json({message: "Updated:欢迎参加大岛优子和我的婚礼"});
     try{
         const {title, content} = req.body;
-        const updatedNote = await Note.findByIdAndUpdate(req.params.id, {title, content},{new: true}) //new: true表示返回更新后的文档 不写则返回更新前的文档
+       
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)){
+            return res.status(400).json({message:"Invalid note ID鸭鸭鸭"});
+        }
+
+        //const updatedNote = await Note.findByIdAndUpdate(req.params.id, {title, content},{new: true}) //new: true表示返回更新后的文档 不写则返回更新前的文档
+        // 关键：加 ownerFilter，防止改到别人的 note
+        const updatedNote = await Note.findOneAndUpdate(
+        { _id: req.params.id, ...ownerFilter(req) },
+        { title, content },
+        { new: true }
+    );
+        
         if (!updatedNote) return res.status(404).json({message: "Note not found鸭鸭鸭"});
         res.status(200).json(updatedNote);
     }catch(error){
@@ -88,7 +134,14 @@ export async function updateNote(req, res){
 export async function deleteNote(req, res){
     //res.status(200).json({message: "Deleted:欢迎参加大岛优子和我的婚礼"});
     try{
-        const deletedNote = await Note.findByIdAndDelete(req.params.id);
+       if (!mongoose.Types.ObjectId.isValid(req.params.id)){
+            return res.status(400).json({message:"Invalid note ID鸭鸭鸭"});
+        }
+       
+        //const deletedNote = await Note.findByIdAndDelete(req.params.id);
+        // 关键：加 ownerFilter，防止删到别人的 note
+        const deletedNote = await Note.findOneAndDelete({ _id: req.params.id, ...ownerFilter(req) });
+        
         if (!deletedNote) return res.status(404).json({message: "Note not found鸭鸭鸭"});
         res.status(200).json({message:"delete with succusss鸭鸭鸭"});
     }catch(error){

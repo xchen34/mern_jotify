@@ -30,7 +30,7 @@ const ratelimit = new Ratelimit({
 //     }
 // }
 
-// export default ratelimit;
+ export default ratelimit;
 
 
 

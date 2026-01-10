@@ -8,14 +8,28 @@ const noteSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true,
+        trim: true,
+        maxlength: 100,
     },
     content: {
         type: String,
         required: true,
+        trim: true,
+        maxlength: 5000,
     },
+    ownerId: {
+        type: String, required: true, index: true
+    },
+    ownerType: {
+        type: String, required: true, enum: ['user', 'guest'], index: true  
+    },
+    expiresAt: {type: Date, default: null}  //default null means no expiration 
 },
 {timestamps: true}
 );
+
+//guest data expires automatically 
+noteSchema.index({ expiresAt: 1 }, {expiresAfterSeconds: 0});  //设置TTL（time to live）索引 过期时间到达0秒后自动删除文档  1表示升序 从最早到最新 这个不影响过期时间 只影响索引的存储顺序
 
 const Note = mongoose.model("Note", noteSchema);
 

@@ -160,6 +160,17 @@ dist/
 
 
 我在开发时第一次装了dependencies 所有的都会自动被记录到package.json 这样在部署的时候就不用一条条查询我安装了什么重新安装 而是一个npm install就会根据package.json自动安装所有依赖
-react是前端UI库（meta开发 不是框架）  vite是构建工具也不是框架 react需要自己搭配工具 灵活 适合中小项目 javascript/typescript可选 next.js=react全站框架
-竞争对手是angular(前端框架 google开发) 更难学 灵活性低但全家通 适合大型企业项目 typescript强制
+React 是一个前端 UI 库，主要负责视图层的渲染和状态更新，由 Meta 开发，本身不是一个完整框架。
+React 只解决 UI 问题，路由、状态管理、构建、数据请求等需要自行组合工具，因此非常灵活，适合中小型项目，也能通过良好架构支撑大型项目。
+React 可以使用 JavaScript 或 TypeScript。
+
+Vite 是一个前端构建工具，负责开发服务器、模块热更新和打包构建，并不是框架。
+它可以搭配 React、Vue、Svelte 等多种前端框架或库，提供更快的开发体验。
+
+Next.js 是基于 React 的全栈框架，在 React 之上提供了路由、服务端渲染（SSR）、静态生成（SSG）以及后端 API（API Routes）。
+它可以用一套项目同时完成前端和后端逻辑，因此常被称为“React 的全栈解决方案”。
+
+Angular 是一个前端框架，由 Google 开发，功能非常完整，内置路由、HTTP、表单、依赖注入等。
+Angular 仍然是前端框架，不是后端框架，它本身不负责数据库或服务器业务逻辑，但其工程化能力强、规范严格、TypeScript 是强制的。
+Angular 学习成本较高、灵活性相对较低，但在大型企业项目中具有一致性和可维护性优势。
 
