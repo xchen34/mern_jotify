@@ -11,6 +11,9 @@ const router = express.Router();
 router.use(requireAuth);  //在所有路由中间件中使用身份验证中间件
 
 
+
+
+
 //controllers文件夹下的文件可以专门用来写路由的回调函数 即处理请求的逻辑单独抽离到controllers
 //是一种标准架构
 //控制器的角色 

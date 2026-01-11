@@ -18,7 +18,9 @@ import {connectDB} from "./config/db.js"
 
 import path from "path";
 
-
+import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import authRoutes from "./routes/authRoutes.js";
 
 
 
@@ -71,11 +73,20 @@ connectDB().then(() => {
 //         把那一串 JSON 字符串“翻译”回 JavaScript 对象。
 //         把它挂载到 req.body 上，供你后续使用。
 
-if (process.env.NODE_ENV !== "production"){
-    app.use(cors({
-        origin:"http://localhost:5173",
-    })); //这个是前后端不在同端口时需要的 跨域资源共享 中间件
-}
+// if (process.env.NODE_ENV !== "production"){
+//     app.use(cors({
+//         origin:"http://localhost:5173",
+//     })); //这个是前后端不在同端口时需要的 跨域资源共享 中间件
+// }
+
+app.use(helmet()); //设置各种HTTP头以增强应用的安全性 保护应用免受一些已知的web漏洞攻击
+
+app.use(cookieParser()); //解析请求中的Cookie头，并将解析后的Cookie对象挂载到req.cookies属性上，方便后续处理中间件或路由访问
+
+app.use(cors({
+    origin: process.env.CORS_ORIGIN || "http://localhost:5173", //允许访问的前端地址
+    credentials: true, //允许携带cookie
+})); //这个是前后端不在同端口时需要的 跨域资源共享 中间件
 
 
 
@@ -83,7 +94,7 @@ app.use(express.json());  //this middleware will parse json bodies to allow acce
 
 app.use(rateLimiter);
 
-
+app.use("/api/auth", authRoutes); //挂载认证路由中间件 处理/auth开头的路由请求
 
 //other simple customized middleware
 // app.use((req,res,next)=>{
@@ -264,6 +275,9 @@ if (process.env.NODE_ENV === "production"){
 //mode.js版本太低导致upstash fetch报错，因为低版本没有内置fetch  可以升级或者安装fetch  npm install node-fetch
 //然后在ratelimit.js 引入fetch 
 // nmp i cors 
+//npm i jsonwebtoken bcryptjs cookie-parser helmet express-rate-limit zod
+
+
 
 //status code   1xx informational   2xx success(200 ok, 201 Created)  3xx redirection(300 rediction, 301 moved permanently.change from http to https)  
 // 4xx client error (400 bad request, 404 not found, 401 unauthorized, 403 forbidden, 429 too many requests)  
