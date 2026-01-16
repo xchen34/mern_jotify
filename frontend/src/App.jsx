@@ -1,8 +1,9 @@
-import { Route, Routes } from 'react-router';
+import { Route, Routes } from 'react-router-dom';
 
 import HomePage from "./pages/HomePage";
 import CreatePage from "./pages/CreatePage";
 import NoteDetailPage from "./pages/NoteDetailPage";
+import EntryPage from "./pages/EntryPage";
 import toast from "react-hot-toast";
 
 
@@ -16,12 +17,13 @@ const App = () => {
       <button className="btn btn-neutral">Neutral</button>
        <button className="btn btn-ghost">Ghost</button>
         <button className="btn btn-link">Link</button> */}
-        <div className="absolute inset-0 -z-10 h-full w-full items-center px-5 py-24 [background:radial-gradien
+      <div className="absolute inset-0 -z-10 h-full w-full items-center px-5 py-24 [background:radial-gradien
         (125%_125%_at_50%_10%,#000-60%m#000FF9D40_100%)]" />
       <Routes>
+        <Route path="/login" element={<EntryPage />} />
         <Route path="/" element={<HomePage />} />
-        <Route path="/create" element={<CreatePage/>} />
-        <Route path="/note/:id" element={<NoteDetailPage/>} />
+        <Route path="/create" element={<CreatePage />} />
+        <Route path="/note/:id" element={<NoteDetailPage />} />
       </Routes>
 
     </div>
