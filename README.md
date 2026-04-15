@@ -147,21 +147,6 @@ Common error:
 - `The given origin is not allowed for the given client ID`
   - Fix: add the exact origin (scheme + host + port) you are visiting.
 
-## Troubleshooting
-
-- `401` on `/api/auth/refresh`
-  - Usually means the refresh cookie wasn’t set/sent.
-  - In dev, avoid mixing `localhost` and `127.0.0.1` (cookies are host-specific).
-  - Ensure `withCredentials: true` is enabled on the frontend Axios client.
-- `429 Too Many Requests`
-  - Typically happens when the app repeatedly retries refresh after a `401`.
-  - Fix the underlying refresh `401` first.
-- Google login popup stays blank / console shows `transform_layer_library... postMessage`
-  - This is commonly caused by `Cross-Origin-Opener-Policy: same-origin` which breaks OAuth popups (it can null `window.opener`).
-  - Fix: set COOP to `same-origin-allow-popups` (this repo does it via Helmet in `backend/src/server.js`).
-- CSP blocking Google script in production
-  - In production, Helmet enables CSP. This backend config allows Google Identity scripts; ensure you are running with `NODE_ENV=production`.
-
 ## License
 
 Personal project. Add a license if you plan to open-source it.
